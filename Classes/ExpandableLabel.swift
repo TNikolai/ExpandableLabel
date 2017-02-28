@@ -21,6 +21,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+func + (left: NSAttributedString, right: NSAttributedString) -> NSAttributedString
+{
+    let result = NSMutableAttributedString()
+    result.append(left)
+    result.append(right)
+    return result
+}
+
 import UIKit
 
 /**
@@ -76,6 +84,15 @@ open class ExpandableLabel : UILabel {
         }
     }
     
+    /// Set the link name (and attributes) that is shown when expanded.
+    /// The default value is "Close". Can be nil.
+    @IBInspectable open var expandedAttributedLink : NSAttributedString! {
+        didSet {
+            self.expandedAttributedLink = expandedAttributedLink.copyWithAddedFontAttribute(font)
+        }
+    }
+
+    
     /// Set the ellipsis that appears just after the text and before the link.
     /// The default value is "...". Can be nil.
     open var ellipsis : NSAttributedString?{
@@ -121,6 +138,7 @@ open class ExpandableLabel : UILabel {
         lineBreakMode = NSLineBreakMode.byClipping
         numberOfLines = 3
         collapsedAttributedLink = NSAttributedString(string: "More", attributes: [NSFontAttributeName : UIFont.boldSystemFont(ofSize: font.pointSize)])
+        expandedAttributedLink = NSAttributedString(string: "Close", attributes: [NSFontAttributeName : UIFont.boldSystemFont(ofSize: font.pointSize)])
         ellipsis = NSAttributedString(string: "...")
     }
     
@@ -140,7 +158,7 @@ open class ExpandableLabel : UILabel {
     open override var attributedText: NSAttributedString? {
         set(attributedText) {
             if let attributedText = attributedText, attributedText.length > 0 {
-                self.expandedText = attributedText.copyWithAddedFontAttribute(font)
+                self.expandedText = getCollapsedTextForText( attributedText.copyWithAddedFontAttribute(font), link: (linkHighlighted) ? expandedAttributedLink.copyWithHighlightedColor() : expandedAttributedLink)
                 self.collapsedText = getCollapsedTextForText(self.expandedText, link: (linkHighlighted) ? collapsedAttributedLink.copyWithHighlightedColor() : collapsedAttributedLink)
                 super.attributedText = (self.collapsed) ? self.collapsedText : self.expandedText;
             } else {
@@ -179,7 +197,6 @@ open class ExpandableLabel : UILabel {
         }
         return lineTextWithLink
     }
-    
     
     fileprivate func getCollapsedTextForText(_ text : NSAttributedString?, link: NSAttributedString) -> NSAttributedString? {
         if let text = text {
